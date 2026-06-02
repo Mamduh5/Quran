@@ -1,0 +1,77 @@
+{
+  "name": "quran_codex_handoff_kit",
+  "generated_at_utc": "2026-06-02T07:11:40.040501+00:00",
+  "file_count": 14,
+  "files": [
+    {
+      "path": ".codex/README.md",
+      "bytes": 293,
+      "sha256": "f615f9d1527a704e32f272f512008fa651380c4016920fd13ef1270ad40a3bc5"
+    },
+    {
+      "path": ".codex/prompts/quran-e2e.md",
+      "bytes": 13516,
+      "sha256": "d916b4615cd865f3a34c7c62a753e46224cde88ea00128ba5eb9f844b4ee74fb"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 3107,
+      "sha256": "e7ed22d2fde6bfb9a5366029b10702dba18b6b8e08f8f76b60d0869b66582285"
+    },
+    {
+      "path": "CODEX_FULL_E2E_PROMPT.md",
+      "bytes": 13516,
+      "sha256": "d916b4615cd865f3a34c7c62a753e46224cde88ea00128ba5eb9f844b4ee74fb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2111,
+      "sha256": "f513fd0e701a4124be8e6a0ce5037594d12d7534806d563df4f4933741d9b3c3"
+    },
+    {
+      "path": "docs/AGENT_TASKS.md",
+      "bytes": 2097,
+      "sha256": "ad5d37dd3799765cc006473f2b35049f958f18944a0e384b6444e5528d270839"
+    },
+    {
+      "path": "docs/CONTENT_RELIABILITY_POLICY.md",
+      "bytes": 3366,
+      "sha256": "6dcd122f572916723b58ce17abdd6688175d56ee69623cbffb7fcc847a567ce0"
+    },
+    {
+      "path": "docs/DATA_MODEL.md",
+      "bytes": 3687,
+      "sha256": "ca091e842ad400de4fa79e6f070aeae5d34c6fbf2f56ab582967736b36daa704"
+    },
+    {
+      "path": "docs/IMPORT_AND_VERIFICATION_PIPELINE.md",
+      "bytes": 3490,
+      "sha256": "6734e8d4e0372fc59bc790709de17c2bdc23827d6d57666f42962e8657021ddc"
+    },
+    {
+      "path": "docs/PROJECT_STRUCTURE.md",
+      "bytes": 4219,
+      "sha256": "f98da8d33e1fb4d50043d64b2319b849432cffdd220adc5cf125a065d8f15c10"
+    },
+    {
+      "path": "docs/SOURCE_CANDIDATES.md",
+      "bytes": 1729,
+      "sha256": "ec3b5531d4ae1cae7ce889cf0fc02f49134ca40b65f8d66e77c50895d13958bf"
+    },
+    {
+      "path": "docs/TEST_PLAN.md",
+      "bytes": 2418,
+      "sha256": "cbc84cd3df571ae2fac8549bb88d633da0c285c64fbe34d2a1399083a005c1f6"
+    },
+    {
+      "path": "docs/UI_MOCKUP_BASE.md",
+      "bytes": 6604,
+      "sha256": "98d4d295b54c8fa0ef58e53524d8706a9645a96a0738f3c99ed60d1c737b0e35"
+    },
+    {
+      "path": "docs/ui-mockup-base.html",
+      "bytes": 7893,
+      "sha256": "f96382c5a8cedd3b72c64a7e7c780f910af73bf8b66bda2061419c4091b58329"
+    }
+  ]
+}

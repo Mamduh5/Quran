@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quran Reader UI Mockup Base</title>
+  <style>
+    :root {
+      --bg: #f7f3ea;
+      --panel: #fffdf8;
+      --panel-2: #f0eadf;
+      --text: #1d1b16;
+      --muted: #6f6759;
+      --line: #ded5c6;
+      --accent: #2f6f5e;
+      --accent-soft: #e2f0eb;
+      --warn-soft: #fff4d6;
+      --shadow: 0 18px 45px rgba(29, 27, 22, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 32px;
+      background: rgba(255, 253, 248, 0.9);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .brand { font-weight: 800; letter-spacing: -0.03em; font-size: 22px; }
+    .nav { display: flex; gap: 18px; color: var(--muted); font-size: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+    .sidebar, .content-panel, .ayah-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+    }
+    .sidebar { padding: 18px; align-self: start; position: sticky; top: 84px; }
+    .sidebar h2 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .surah-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 6px;
+      border: 1px solid transparent;
+    }
+    .surah-item.active { background: var(--accent-soft); border-color: #b9d6cc; }
+    .surah-title { font-weight: 700; }
+    .surah-meta { font-size: 12px; color: var(--muted); }
+    .content-panel { padding: 28px; }
+    .reader-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+    .reader-head h1 { margin: 0 0 4px; font-size: 34px; letter-spacing: -0.04em; }
+    .reader-head p { margin: 0; color: var(--muted); }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .control {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .ayah-card { padding: 26px; margin: 20px 0; box-shadow: none; }
+    .ayah-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 650;
+      font-size: 12px;
+    }
+    .arabic-placeholder {
+      min-height: 96px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #eee7db, #f8f4ec);
+      border: 1px dashed #cfc5b7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 18px;
+      text-align: center;
+      padding: 24px;
+    }
+    .section-label {
+      margin: 24px 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+    .translation, .tafsir {
+      border-left: 4px solid var(--line);
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #fbf8f1;
+    }
+    .tafsir { background: var(--warn-soft); }
+    .source-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .report { margin-left: auto; color: var(--accent); font-weight: 700; }
+    @media (max-width: 860px) {
+      .topbar { padding: 14px 18px; }
+      .nav { display: none; }
+      .layout { grid-template-columns: 1fr; padding: 18px 14px 88px; }
+      .sidebar { position: static; order: 2; }
+      .content-panel { padding: 18px; }
+      .reader-head { display: block; }
+      .controls { justify-content: flex-start; margin-top: 16px; }
+      .reader-head h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Quran Reader</div>
+    <nav class="nav" aria-label="Main navigation">
+      <span>Quran</span>
+      <span>Search</span>
+      <span>Sources</span>
+      <span>Admin</span>
+    </nav>
+  </header>
+  <main class="layout">
+    <aside class="sidebar" aria-label="Surah navigation">
+      <h2>Surahs</h2>
+      <div class="surah-item active">
+        <div>
+          <div class="surah-title">1. Al-Fatihah</div>
+          <div class="surah-meta">7 ayahs</div>
+        </div>
+        <div class="surah-meta">Meccan</div>
+      </div>
+      <div class="surah-item">
+        <div>
+          <div class="surah-title">2. Al-Baqarah</div>
+          <div class="surah-meta">286 ayahs</div>
+        </div>
+        <div class="surah-meta">Medinan</div>
+      </div>
+      <div class="surah-item">
+        <div>
+          <div class="surah-title">3. Ali Imran</div>
+          <div class="surah-meta">200 ayahs</div>
+        </div>
+        <div class="surah-meta">Medinan</div>
+      </div>
+    </aside>
+    <section class="content-panel">
+      <div class="reader-head">
+        <div>
+          <h1>Al-Fatihah</h1>
+          <p>Arabic Quran text, translation of meaning, and tafsir are clearly separated and source-labeled.</p>
+        </div>
+        <div class="controls" aria-label="Reader controls">
+          <span class="control">Translation: Select source</span>
+          <span class="control">Tafsir: Select source</span>
+          <span class="control">Font: Medium</span>
+        </div>
+      </div>
+      <article class="ayah-card">
+        <div class="ayah-top">
+          <span>Ayah 1:1</span>
+          <span class="badge">Verified source</span>
+        </div>
+        <div class="arabic-placeholder" dir="rtl" lang="ar">
+          Arabic Quran text is loaded only from verified imported source data.
+        </div>
+        <div class="section-label">Translation of meaning</div>
+        <div class="translation">Translation text appears here after importing and verifying an approved translation source.</div>
+        <div class="section-label">Tafsir / explanation</div>
+        <div class="tafsir">Tafsir text appears here after importing and verifying an approved tafsir source.</div>
+        <div class="source-line">
+          <span>Arabic source: source name/version</span>
+          <span>Translation source: source name/version</span>
+          <span>Tafsir source: source name/version</span>
+          <span>Checksum: available in details</span>
+          <span class="report">Report possible issue</span>
+        </div>
+      </article>
+      <article class="ayah-card">
+        <div class="ayah-top">
+          <span>Ayah 1:2</span>
+          <span class="badge">Verified source</span>
+        </div>
+        <div class="arabic-placeholder" dir="rtl" lang="ar">Next ayah Arabic text placeholder</div>
+        <div class="section-label">Translation of meaning</div>
+        <div class="translation">Translation placeholder.</div>
+        <div class="section-label">Tafsir / explanation</div>
+        <div class="tafsir">Tafsir placeholder.</div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

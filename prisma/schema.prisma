@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentType {
+  quran_text
+  translation
+  tafsir
+  audio
+  metadata
+  source_metadata
+  display
+  other
+}
+
+enum TrustStatus {
+  candidate
+  approved
+  deprecated
+  rejected
+}
+
+enum ImportStatus {
+  staged
+  verified
+  failed
+  published
+  archived
+}
+
+enum VerificationStatus {
+  passed
+  failed
+  warning
+}
+
+enum IssueStatus {
+  open
+  reviewing
+  resolved
+  rejected
+}
+
+model Surah {
+  id                  String   @id @default(cuid())
+  number              Int      @unique
+  nameArabic          String?
+  nameTransliteration String?
+  nameEnglish         String?
+  revelationType      String?
+  ayahCount           Int
+  ayahs               Ayah[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Ayah {
+  id           String               @id @default(cuid())
+  surahId      String
+  ayahNumber   Int
+  juz          Int?
+  hizb         Int?
+  page         Int?
+  surah        Surah                @relation(fields: [surahId], references: [id], onDelete: Restrict)
+  quranTexts   QuranText[]
+  translations Translation[]
+  tafsirs      Tafsir[]
+  issueReports ContentIssueReport[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@unique([surahId, ayahNumber])
+  @@index([ayahNumber])
+}
+
+model ContentSource {
+  id          String          @id @default(cuid())
+  name        String
+  provider    String
+  contentType ContentType
+  language    String?
+  url         String?
+  licenseName String?
+  licenseUrl  String?
+  version     String        @default("")
+  trustStatus TrustStatus     @default(candidate)
+  notes       String?
+  imports     ContentImport[]
+  quranTexts  QuranText[]
+  translations Translation[]
+  tafsirs     Tafsir[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([name, provider, contentType, version])
+}
+
+model ContentImport {
+  id              String               @id @default(cuid())
+  sourceId        String
+  source          ContentSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  contentType     ContentType
+  sourceVersion   String?
+  importStatus    ImportStatus         @default(staged)
+  importedAt      DateTime             @default(now())
+  importedBy      String?
+  totalRecords    Int
+  checksumSummary String?
+  manifestJson    Json?
+  notes           String?
+  quranTexts      QuranText[]
+  translations    Translation[]
+  tafsirs         Tafsir[]
+  verificationReports VerificationReport[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([contentType, importStatus])
+  @@index([sourceId])
+}
+
+model QuranText {
+  id         String        @id @default(cuid())
+  ayahId     String
+  ayah       Ayah          @relation(fields: [ayahId], references: [id], onDelete: Restrict)
+  scriptType String
+  text       String
+  sourceId   String
+  source     ContentSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  importId   String
+  import     ContentImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+  checksum   String
+  verifiedAt DateTime?
+  locked     Boolean       @default(true)
+  active     Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([ayahId, scriptType, sourceId, importId])
+  @@index([active])
+  @@index([checksum])
+}
+
+model Translation {
+  id             String        @id @default(cuid())
+  ayahId         String
+  ayah           Ayah          @relation(fields: [ayahId], references: [id], onDelete: Restrict)
+  language       String
+  translatorName String?
+  text           String
+  sourceId       String
+  source         ContentSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  importId       String
+  import         ContentImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+  checksum       String
+  active         Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([ayahId, language, sourceId, importId])
+  @@index([active])
+  @@index([checksum])
+}
+
+model Tafsir {
+  id         String        @id @default(cuid())
+  ayahId     String
+  ayah       Ayah          @relation(fields: [ayahId], references: [id], onDelete: Restrict)
+  language   String
+  tafsirName String
+  authorName String?
+  text       String
+  sourceId   String
+  source     ContentSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  importId   String
+  import     ContentImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+  checksum   String
+  active     Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([ayahId, language, tafsirName, sourceId, importId])
+  @@index([active])
+  @@index([checksum])
+}
+
+model VerificationReport {
+  id               String             @id @default(cuid())
+  importId         String
+  import           ContentImport      @relation(fields: [importId], references: [id], onDelete: Cascade)
+  status           VerificationStatus
+  differencesFound Int
+  checkedRecords   Int
+  reportJson       Json?
+  createdAt        DateTime           @default(now())
+
+  @@index([status])
+}
+
+model ContentIssueReport {
+  id          String      @id @default(cuid())
+  ayahId      String?
+  ayah        Ayah?       @relation(fields: [ayahId], references: [id], onDelete: SetNull)
+  contentType ContentType
+  contentId   String?
+  message     String
+  status      IssueStatus @default(open)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([contentType])
+}
