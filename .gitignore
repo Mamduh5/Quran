@@ -6,6 +6,7 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+.codex/*.log
 data/sources/**
 !data/sources/.gitkeep
 prisma/dev.db

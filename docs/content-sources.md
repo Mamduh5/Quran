@@ -22,15 +22,28 @@ Every source file must record:
 
 ### Arabic Quran Text
 
-Start with a single script policy and one source. Tanzil is a common candidate for Arabic Quran text, but its current license and attribution requirements must be reviewed before importing.
+Start with a single script policy and one source. The implemented first production source is Tanzil Project Arabic Quran text, Uthmani text, Version 1.1.
 
-Recommended steps:
+Implemented Tanzil source details:
 
-1. Download the source file manually from the reviewed provider.
-2. Save the exact source URL and version/date.
-3. Record the provider license terms in the source JSON metadata.
-4. Keep the source file outside Git unless the license permits committing it.
-5. Import, verify, then publish only after approval.
+- source name: Tanzil Project
+- provider: Tanzil Project
+- official download page: `https://tanzil.net/download/`
+- exact download endpoint: `https://tanzil.net/pub/download/index.php?quranType=uthmani&outType=txt-2&marks=true&sajdah=true&tatweel=true&agree=true`
+- license/terms page: `https://tanzil.net/docs/Text_License`
+- version/date: Version 1.1, published February 2021
+- selected text type: Uthmani
+- output format: text with ayah numbers (`surah|ayah|text`)
+
+Tanzil terms permit verbatim copies and use in websites or applications with clear Tanzil Project attribution and a link to tanzil.net; changing the text is not allowed. The downloader preserves the original file separately and converts only structure into JSON rows without changing verse text.
+
+Run:
+
+```bash
+npm run content:download:tanzil
+```
+
+Then import, verify, publish, and audit through the normal content workflow.
 
 ### Translation
 

@@ -6,19 +6,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminReportsPage() {
   const access = getAdminAccess();
-
-  if (!access.enabled) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <AdminDisabledNotice reason={access.reason} />
-      </main>
-    );
-  }
-
   const reports = await listIssueReports();
 
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6">
+      {!access.enabled ? <AdminDisabledNotice reason={access.reason} /> : null}
       <header>
         <h1 className="text-3xl font-bold text-ink">Issue reports</h1>
         <p className="mt-2 text-muted">
@@ -40,7 +32,7 @@ export default async function AdminReportsPage() {
               </span>
             </div>
             <p className="mt-2 text-sm text-muted">
-              {report.contentType} · {report.createdAt.toLocaleString()}
+              {report.contentType} / {report.createdAt.toLocaleString()}
             </p>
             <p className="mt-3 text-ink">{report.message}</p>
           </article>

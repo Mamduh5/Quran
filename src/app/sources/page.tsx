@@ -47,7 +47,7 @@ export default async function SourcesPage() {
                   </td>
                   <td className="px-4 py-3 text-muted">
                     {source.contentType}
-                    {source.language ? ` · ${source.language}` : ""}
+                    {source.language ? ` / ${source.language}` : ""}
                   </td>
                   <td className="px-4 py-3 text-muted">
                     {source.licenseUrl ? (

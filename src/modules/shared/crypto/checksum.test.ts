@@ -4,6 +4,7 @@ import {
   buildRowChecksumPayload,
   rowChecksum,
   sha256,
+  sha256Bytes,
   summaryChecksum
 } from "@/modules/shared/crypto/checksum";
 
@@ -21,6 +22,13 @@ describe("checksum service", () => {
   it("returns deterministic SHA-256 values", () => {
     expect(sha256("same input")).toBe(sha256("same input"));
     expect(sha256("same input")).not.toBe(sha256("different input"));
+  });
+
+  it("returns deterministic source file byte checksums", () => {
+    const bytes = new TextEncoder().encode("fixture source file");
+
+    expect(sha256Bytes(bytes)).toBe(sha256Bytes(bytes));
+    expect(sha256Bytes(bytes)).toHaveLength(64);
   });
 
   it("uses a stable documented row payload", () => {

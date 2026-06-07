@@ -6,19 +6,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminVerificationPage() {
   const access = getAdminAccess();
-
-  if (!access.enabled) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <AdminDisabledNotice reason={access.reason} />
-      </main>
-    );
-  }
-
   const reports = await listVerificationDashboardItems();
 
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6">
+      {!access.enabled ? <AdminDisabledNotice reason={access.reason} /> : null}
       <header>
         <h1 className="text-3xl font-bold text-ink">Verification reports</h1>
         <p className="mt-2 text-muted">
@@ -31,7 +23,7 @@ export default async function AdminVerificationPage() {
             <div className="flex flex-wrap justify-between gap-4">
               <div>
                 <h2 className="font-semibold text-ink">
-                  {report.import.source.name} · {report.import.contentType}
+                  {report.import.source.name} / {report.import.contentType}
                 </h2>
                 <p className="text-sm text-muted">{report.createdAt.toLocaleString()}</p>
               </div>

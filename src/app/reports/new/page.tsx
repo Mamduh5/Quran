@@ -1,10 +1,12 @@
 import { IssueReportForm } from "@/components/reports/IssueReportForm";
 
-export default function NewReportPage({
+export default async function NewReportPage({
   searchParams
 }: {
-  searchParams: { ayah?: string; status?: string };
+  searchParams: Promise<{ ayah?: string; status?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <section className="rounded-lg border border-line bg-panel p-6 shadow-soft">
@@ -13,11 +15,11 @@ export default function NewReportPage({
           Reports create review records for source/content investigation. They
           never change Quran text, translation, or tafsir automatically.
         </p>
-        {searchParams.status ? (
-          <StatusMessage status={searchParams.status} />
+        {resolvedSearchParams.status ? (
+          <StatusMessage status={resolvedSearchParams.status} />
         ) : null}
         <div className="mt-6">
-          <IssueReportForm ayahReference={searchParams.ayah} />
+          <IssueReportForm ayahReference={resolvedSearchParams.ayah} />
         </div>
       </section>
     </main>

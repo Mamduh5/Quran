@@ -131,7 +131,8 @@ The repository now uses the recommended shape with these concrete additions:
 - `src/components/` contains reader, source, report, layout, and shared UI components.
 - `src/modules/quran`, `translation`, `tafsir`, `content-source`, `verification`, `search`, `reports`, `admin`, and `shared` contain domain/application/infrastructure code.
 - `prisma/schema.prisma` and `prisma/migrations/20260602000000_initial/migration.sql` define the PostgreSQL schema.
-- `scripts/` contains import, verify, publish, and audit entrypoints.
+- `docker-compose.yml` defines local PostgreSQL for development and a test database initializer under `prisma/docker/`.
+- `scripts/` contains Tanzil download, import, verify, publish, audit, and HTTP route-check entrypoints.
 - `data/sources/` is ignored by Git and reserved for reviewed source files.
 - `data/fixtures/` is reserved for test-only fixtures.
 

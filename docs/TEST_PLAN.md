@@ -83,6 +83,7 @@ If a command is missing or fails because of environment setup, document the exac
 Current unit and smoke tests cover:
 
 - checksum determinism and checksum payload stability
+- source file byte checksum determinism
 - summary checksum order independence
 - import validation rejecting missing metadata
 - import validation rejecting invalid ayah references
@@ -98,9 +99,12 @@ Current unit and smoke tests cover:
 - Quran text entity exposing no text mutation methods
 - Ayah card rendering Arabic, translation, tafsir, and source detail sections separately
 - admin UI source files containing no direct authoritative text edit fields
+- DB-backed workflow integration using `TEST_DATABASE_URL`: malformed import rejection, valid import staging, verification, publish, verification mismatch failure, publish blocked for unapproved sources, publish blocked before verification, and public repository filtering before and after publication
+- HTTP route checker script: all public/admin routes return 200, imported content appears on `/quran/1`, `/quran/1/1`, and `/search`, and issue report submission creates one report without mutating Quran rows
 
 Run:
 
 ```bash
 npm test
+npm run app:check:routes -- http://localhost:3000
 ```

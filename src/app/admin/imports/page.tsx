@@ -7,19 +7,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminImportsPage() {
   const access = getAdminAccess();
-
-  if (!access.enabled) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <AdminDisabledNotice reason={access.reason} />
-      </main>
-    );
-  }
-
   const imports = await listImportDashboardItems();
 
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6">
+      {!access.enabled ? <AdminDisabledNotice reason={access.reason} /> : null}
       <header>
         <h1 className="text-3xl font-bold text-ink">Import dashboard</h1>
         <p className="mt-2 text-muted">
@@ -49,7 +41,7 @@ export default async function AdminImportsPage() {
                 <td className="px-4 py-3">
                   <div className="font-semibold text-ink">{item.source.name}</div>
                   <div className="text-muted">
-                    {item.contentType} · {item.source.trustStatus}
+                    {item.contentType} / {item.source.trustStatus}
                   </div>
                 </td>
                 <td className="px-4 py-3 font-semibold text-ink">
@@ -60,20 +52,24 @@ export default async function AdminImportsPage() {
                   {item.checksumSummary ?? "Pending"}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <form action={verifyImportAction}>
-                      <input name="importId" type="hidden" value={item.id} />
-                      <button className="focus-ring rounded border border-line bg-white px-3 py-2 font-semibold text-accent">
-                        Verify
-                      </button>
-                    </form>
-                    <form action={publishImportAction}>
-                      <input name="importId" type="hidden" value={item.id} />
-                      <button className="focus-ring rounded bg-accent px-3 py-2 font-semibold text-white">
-                        Publish
-                      </button>
-                    </form>
-                  </div>
+                  {access.enabled ? (
+                    <div className="flex flex-wrap gap-2">
+                      <form action={verifyImportAction}>
+                        <input name="importId" type="hidden" value={item.id} />
+                        <button className="focus-ring rounded border border-line bg-white px-3 py-2 font-semibold text-accent">
+                          Verify
+                        </button>
+                      </form>
+                      <form action={publishImportAction}>
+                        <input name="importId" type="hidden" value={item.id} />
+                        <button className="focus-ring rounded bg-accent px-3 py-2 font-semibold text-white">
+                          Publish
+                        </button>
+                      </form>
+                    </div>
+                  ) : (
+                    <span className="text-muted">Mutations disabled</span>
+                  )}
                 </td>
               </tr>
             ))}

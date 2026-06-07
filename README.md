@@ -18,9 +18,17 @@ The app intentionally ships with no production Quran, translation, or tafsir tex
 ```bash
 npm install
 copy .env.example .env
+docker compose up -d postgres
 ```
 
-Edit `.env` and set `DATABASE_URL` to a PostgreSQL database.
+The default `.env.example` points at the local Docker Postgres service:
+
+```env
+DATABASE_URL="postgresql://quran:change-me@localhost:5432/quran_reader?schema=public"
+TEST_DATABASE_URL="postgresql://quran:change-me@localhost:5432/quran_reader_test?schema=public"
+ADMIN_IMPORTS_ENABLED="false"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
 
 ```bash
 npm run db:generate
@@ -30,7 +38,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Admin pages are protected by default. To enable admin actions in a trusted environment:
+Admin dashboards are readable by default, but mutation actions are disabled. To enable admin actions in a trusted local or protected environment:
 
 ```env
 ADMIN_IMPORTS_ENABLED="true"
@@ -47,14 +55,32 @@ npm run build
 
 ## Content Workflow
 
-1. Place reviewed source JSON files under `data/sources/`.
-2. Run `npm run content:import -- data/sources/<type>/<file>.json`.
-3. Run `npm run content:verify -- <import-id>`.
-4. Approve source metadata before publishing.
-5. Run `npm run content:publish -- <import-id>`.
-6. Run `npm run content:audit`.
+Tanzil Arabic Quran text is supported as the first production source.
+
+1. Download from the official Tanzil endpoint and convert to the import JSON shape:
+   `npm run content:download:tanzil`.
+2. Import the processed file:
+   `npm run content:import -- data/sources/processed/tanzil/quran-uthmani-v1.1.json`.
+3. Verify the printed import id:
+   `npm run content:verify -- <import-id>`.
+4. Publish the verified import:
+   `npm run content:publish -- <import-id>`.
+5. Audit public content safety:
+   `npm run content:audit`.
+
+The downloader stores the original file under `data/sources/original/tanzil/`, the processed import file under `data/sources/processed/tanzil/`, and a local manifest with file checksums. `data/sources/` is ignored by Git.
 
 See [docs/import-guide.md](docs/import-guide.md) and [docs/content-sources.md](docs/content-sources.md).
+
+## HTTP Workflow Check
+
+With the dev server running, verify the public/admin pages and report flow:
+
+```bash
+npm run app:check:routes -- http://localhost:3000
+```
+
+If a published ayah exists, this check confirms `/quran/1`, `/quran/1/1`, and `/search` show the imported content. It also submits one display issue report and verifies Quran rows are not mutated.
 
 ## Deployment
 
@@ -62,8 +88,13 @@ See [docs/import-guide.md](docs/import-guide.md) and [docs/content-sources.md](d
 npm ci
 npm run db:generate
 npm run db:deploy
+npm run content:download:tanzil
+npm run content:import -- data/sources/processed/tanzil/quran-uthmani-v1.1.json
+npm run content:verify -- <import-id>
+npm run content:publish -- <import-id>
+npm run content:audit
 npm run build
 npm run start
 ```
 
-Set `ADMIN_IMPORTS_ENABLED=false` for public deployments unless the environment is protected by infrastructure-level access control.
+Set `DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, and any platform secrets before deployment. Keep `ADMIN_IMPORTS_ENABLED=false` for public deployments unless the admin routes are protected by infrastructure-level access control.

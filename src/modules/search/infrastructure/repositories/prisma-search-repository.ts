@@ -67,7 +67,7 @@ export class PrismaSearchRepository implements SearchRepository {
         surahNumber: row.number,
         ayahNumber: 1,
         contentType: "surah" as const,
-        snippet: `${row.nameTransliteration ?? `Surah ${row.number}`} · ${
+        snippet: `${row.nameTransliteration ?? `Surah ${row.number}`} / ${
           row.nameEnglish ?? "Metadata pending"
         }`,
         sourceName: "Surah metadata"

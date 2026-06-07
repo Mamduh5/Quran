@@ -70,10 +70,7 @@ export async function stageImportFromFile(filePath: string) {
       importStatus: "staged",
       totalRecords: sourceFile.rows.length,
       manifestJson: {
-        sourceName: metadata.sourceName,
-        provider: metadata.provider,
-        contentType: metadata.contentType,
-      version: metadata.version ?? null,
+        metadata,
         expectedRecords: sourceFile.expectedRecords ?? null
       }
     }

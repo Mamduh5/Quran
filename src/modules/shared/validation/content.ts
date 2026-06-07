@@ -26,8 +26,12 @@ export const sourceMetadataSchema = z.object({
   language: z.string().trim().min(2).optional(),
   version: z.string().trim().min(1).optional(),
   url: z.string().url().optional(),
+  downloadUrl: z.string().url().optional(),
   licenseName: z.string().trim().min(1).optional(),
   licenseUrl: z.string().url().optional(),
+  downloadedAt: z.string().datetime().optional(),
+  originalFileName: z.string().trim().min(1).optional(),
+  originalFileSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   notes: z.string().trim().optional(),
   trustStatus: z
     .enum(["candidate", "approved", "deprecated", "rejected"])

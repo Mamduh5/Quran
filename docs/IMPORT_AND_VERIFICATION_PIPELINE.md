@@ -136,11 +136,21 @@ Do not fetch random Quran/translation/tafsir content at page-render time. Runtim
 Implemented scripts:
 
 ```bash
+npm run content:download:tanzil
 npm run content:import -- data/sources/<type>/source.json
 npm run content:verify -- <import-id>
 npm run content:publish -- <import-id>
 npm run content:audit
 ```
+
+For Tanzil, use:
+
+```bash
+npm run content:download:tanzil
+npm run content:import -- data/sources/processed/tanzil/quran-uthmani-v1.1.json
+```
+
+The downloader stores the original Tanzil file in `data/sources/original/tanzil/`, stores converted JSON in `data/sources/processed/tanzil/`, and writes a local manifest with original and processed file SHA-256 checksums. The converter parses `surah|ayah|text` rows and skips only Tanzil copyright/comment lines from the processed row list; the original file is preserved separately.
 
 The importer validates source metadata and row shape with Zod, stages inactive rows, and records row and summary checksums. Verification recomputes stored row checksums and records a `VerificationReport`. Publish requires `trustStatus: "approved"` and a verified import.
 

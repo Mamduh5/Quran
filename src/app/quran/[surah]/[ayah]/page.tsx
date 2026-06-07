@@ -10,11 +10,12 @@ export const dynamic = "force-dynamic";
 export default async function FocusedAyahPage({
   params
 }: {
-  params: { surah: string; ayah: string };
+  params: Promise<{ surah: string; ayah: string }>;
 }) {
+  const resolvedParams = await params;
   const ayah = await new GetAyahReader(
     new PrismaPublicQuranRepository()
-  ).execute(params);
+  ).execute(resolvedParams);
 
   if (!ayah) {
     return (

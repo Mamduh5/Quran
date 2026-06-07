@@ -13,13 +13,20 @@ export default async function SurahReaderPage({
   params,
   searchParams
 }: {
-  params: { surah: string };
-  searchParams: { translationSource?: string; tafsirSource?: string };
+  params: Promise<{ surah: string }>;
+  searchParams: Promise<{
+    translationSource?: string;
+    tafsirSource?: string;
+  }>;
 }) {
   const repository = new PrismaPublicQuranRepository();
+  const [{ surah: surahParam }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams
+  ]);
   const [surahs, surah] = await Promise.all([
     new ListPublicSurahs(repository).execute(),
-    new GetSurahReader(repository).execute(params.surah)
+    new GetSurahReader(repository).execute(surahParam)
   ]);
 
   if (!surah) {
@@ -33,8 +40,9 @@ export default async function SurahReaderPage({
     );
   }
 
-  const selectedTranslationSource = searchParams.translationSource ?? "all";
-  const selectedTafsirSource = searchParams.tafsirSource ?? "all";
+  const selectedTranslationSource =
+    resolvedSearchParams.translationSource ?? "all";
+  const selectedTafsirSource = resolvedSearchParams.tafsirSource ?? "all";
   const translationOptions = sourceOptionsFromSurah(surah, "translations");
   const tafsirOptions = sourceOptionsFromSurah(surah, "tafsirs");
   const filteredSurah = filterSurahSources(
@@ -59,7 +67,7 @@ export default async function SurahReaderPage({
                 {surah.nameTransliteration ?? `Surah ${surah.number}`}
               </h1>
               <p className="mt-1 text-muted">
-                {surah.nameEnglish ?? "Metadata pending"} · {surah.ayahCount} ayahs ·{" "}
+                {surah.nameEnglish ?? "Metadata pending"} / {surah.ayahCount} ayahs /{" "}
                 {surah.verifiedAyahCount} verified Arabic rows
               </p>
             </div>

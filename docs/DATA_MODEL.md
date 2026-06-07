@@ -71,7 +71,7 @@ Unique: `surahId + ayahNumber`.
 - importedBy optional
 - totalRecords
 - checksumSummary optional
-- manifestJson optional
+- manifestJson optional; importer stores parsed metadata, expected record count, and source-file details such as Tanzil download URL, downloaded timestamp, and original file checksum when present
 - notes optional
 - createdAt
 - updatedAt
@@ -226,3 +226,5 @@ Important implemented constraints:
 - Tafsir unique by `ayahId + language + tafsirName + sourceId + importId`.
 
 The schema does not add a direct manual edit path for authoritative text. Content changes should be represented by a new `ContentImport` and verified rows.
+
+Tanzil source metadata that does not have dedicated columns, such as `downloadUrl`, `downloadedAt`, `originalFileName`, and `originalFileSha256`, is validated in the source file and stored in `ContentImport.manifestJson`. Source attribution, license, URL, version, approval status, and notes are also stored on `ContentSource`.

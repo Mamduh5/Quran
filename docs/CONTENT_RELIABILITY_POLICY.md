@@ -107,8 +107,9 @@ Resolution must happen through source review and a new verified import when cont
 - Public repository queries filter Quran text by active row, approved source, published import, and non-null verification timestamp.
 - Public translation and tafsir queries filter by active row, approved source, and published import.
 - Admin pages do not include direct edit forms for Quran text, translation text, or tafsir text.
-- Admin mutations are disabled unless `ADMIN_IMPORTS_ENABLED=true`.
+- Admin dashboards are readable, but verify/publish mutations are hidden and server-guarded unless `ADMIN_IMPORTS_ENABLED=true`.
 - Import scripts stage inactive rows and generate per-row SHA-256 checksums.
 - Verification scripts recompute row checksums and record `VerificationReport` rows.
 - Publish requires a verified import and an approved source.
 - Issue reports create review records and do not mutate authoritative content.
+- Tanzil downloading is explicit (`npm run content:download:tanzil`), uses the official Tanzil endpoint, preserves the original file separately, records file checksums, and converts only row structure into the documented import JSON shape.
