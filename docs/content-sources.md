@@ -47,11 +47,41 @@ Then import, verify, publish, and audit through the normal content workflow.
 
 ### Translation
 
-QuranEnc and Quran.com / Quran Foundation resources are candidates. Verify the exact translation, translator, language, license, attribution, and redistribution terms before importing.
+Implemented first translation adapter:
+
+- source name: generated as `QuranEnc <title>`
+- provider: QuranEnc
+- translation key: `english_saheeh`
+- language: `en`
+- title from API list: `English Translation - Noor International Center`
+- version/date: API `version` and `last_update` from `https://quranenc.com/api/v1/translations/list`
+- API docs: `https://quranenc.com/en/home/api/`
+- download endpoints: `https://quranenc.com/api/v1/translation/sura/english_saheeh/{sura_number}`
+- original responses: `data/sources/original/quranenc/translation/english_saheeh/`
+- processed file: `data/sources/processed/quranenc/translation/english_saheeh.json`
+- footnotes: stored separately on translation rows, not appended to Quran text or translation body
+- trust status: `candidate` by default
+
+The QuranEnc API page documents the translation list endpoint and surah endpoint response fields, including `translation` and `footnotes`, but it does not state explicit permanent redistribution terms in the checked documentation. Keep the source as `candidate` until terms are reviewed and approved.
 
 Translations must always be labeled "Translation of meaning" in UI and stored separately from Arabic Quran text.
 
 ### Tafsir
+
+Implemented tafsir pipeline target:
+
+- provider: Quran Foundation Content API
+- default tafsir id: `169`
+- default resource from docs examples: Tafsir Ibn Kathir / Hafiz Ibn Kathir
+- API docs: `https://api-docs.quran.com/docs/content_apis_versioned/4.0.0/tafsir/`
+- resource list docs: `https://api-docs.quran.com/docs/content_apis_versioned/4.0.0/tafsirs/`
+- auth docs: `https://api-docs.quran.com/docs/quickstart/manual-authentication/`
+- developer terms: `https://qf-api-docs.pages.dev/legal/developer-terms/`
+- original responses: `data/sources/original/quran-foundation/tafsir/<id>/`
+- processed file: `data/sources/processed/quran-foundation/tafsir/tafsir-<id>.json`
+- trust status: `candidate` by default
+
+Quran Foundation Content APIs require OAuth2 client credentials. Their developer terms allow display in an application but prohibit caching or storing QF Content longer than 1 week unless expressly permitted. This project therefore blocks the default tafsir downloader unless `QF_TAFSIR_PERSISTENCE_REVIEWED=true` is set after access and storage terms are approved.
 
 Tafsir sources must include tafsir name, author if known, language, provider, version, and license. Do not store AI-generated content as tafsir.
 

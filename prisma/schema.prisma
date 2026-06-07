@@ -153,6 +153,7 @@ model Translation {
   language       String
   translatorName String?
   text           String
+  footnotes      String?
   sourceId       String
   source         ContentSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   importId       String

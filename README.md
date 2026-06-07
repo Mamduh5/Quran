@@ -7,9 +7,9 @@ The app intentionally ships with no production Quran, translation, or tafsir tex
 ## What Works
 
 - Public routes: `/`, `/quran`, `/quran/[surah]`, `/quran/[surah]/[ayah]`, `/search`, `/sources`, `/reports/new`.
-- Guarded admin routes: `/admin/imports`, `/admin/verification`, `/admin/sources`, `/admin/reports`.
+- Authenticated admin routes: `/admin/login`, `/admin/imports`, `/admin/verification`, `/admin/sources`, `/admin/reports`.
 - Prisma schema and initial PostgreSQL migration for sources, imports, Quran text, translations, tafsir, verification reports, and issue reports.
-- Import, verify, publish, and audit scripts.
+- Import, verify, publish, audit, admin password hash, Tanzil download, QuranEnc translation download, and tafsir pipeline scripts.
 - Safe empty states when no database/content is available.
 - Tests for checksums, import validation, verification mismatch, public-read filtering, content immutability shape, UI separation, and admin edit-form safety.
 
@@ -26,6 +26,9 @@ The default `.env.example` points at the local Docker Postgres service:
 ```env
 DATABASE_URL="postgresql://quran:change-me@localhost:5432/quran_reader?schema=public"
 TEST_DATABASE_URL="postgresql://quran:change-me@localhost:5432/quran_reader_test?schema=public"
+AUTH_SECRET=""
+ADMIN_EMAIL=""
+ADMIN_PASSWORD_HASH=""
 ADMIN_IMPORTS_ENABLED="false"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
@@ -38,11 +41,19 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Admin dashboards are readable by default, but mutation actions are disabled. To enable admin actions in a trusted local or protected environment:
+Create an admin password hash and configure admin auth before visiting `/admin/*`:
+
+```bash
+npm run admin:hash-password -- "replace-with-a-long-password"
+```
+
+Set `AUTH_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD_HASH`. Admin pages require login. Admin mutation actions require both a valid admin session and:
 
 ```env
 ADMIN_IMPORTS_ENABLED="true"
 ```
+
+Keep `ADMIN_IMPORTS_ENABLED=false` unless you are in a trusted maintenance window.
 
 ## Checks
 
@@ -70,6 +81,23 @@ Tanzil Arabic Quran text is supported as the first production source.
 
 The downloader stores the original file under `data/sources/original/tanzil/`, the processed import file under `data/sources/processed/tanzil/`, and a local manifest with file checksums. `data/sources/` is ignored by Git.
 
+QuranEnc translation download is implemented for `english_saheeh`:
+
+```bash
+npm run content:download:quranenc:translation
+npm run content:import:translation -- data/sources/processed/quranenc/translation/english_saheeh.json
+npm run content:verify -- <translation-import-id>
+```
+
+The generated source is `candidate` because QuranEnc API docs do not state permanent redistribution terms. Review terms and change source trust status only after approval before publishing.
+
+Tafsir support is implemented for reviewed Quran Foundation Content API source files. The default downloader is blocked until credentials and persistent storage permission are configured:
+
+```bash
+npm run content:download:tafsir
+npm run content:import:tafsir -- data/sources/processed/quran-foundation/tafsir/tafsir-169.json
+```
+
 See [docs/import-guide.md](docs/import-guide.md) and [docs/content-sources.md](docs/content-sources.md).
 
 ## HTTP Workflow Check
@@ -80,7 +108,7 @@ With the dev server running, verify the public/admin pages and report flow:
 npm run app:check:routes -- http://localhost:3000
 ```
 
-If a published ayah exists, this check confirms `/quran/1`, `/quran/1/1`, and `/search` show the imported content. It also submits one display issue report and verifies Quran rows are not mutated.
+This check confirms public pages, unauthenticated admin redirects, optional authenticated admin access when `ADMIN_ROUTE_CHECK_PASSWORD` is set, published Arabic/translation/tafsir proof where available, source attribution, search, and issue report non-mutation.
 
 ## Deployment
 
@@ -98,3 +126,5 @@ npm run start
 ```
 
 Set `DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, and any platform secrets before deployment. Keep `ADMIN_IMPORTS_ENABLED=false` for public deployments unless the admin routes are protected by infrastructure-level access control.
+
+Also set `AUTH_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD_HASH` in production. Never deploy with a plaintext admin password.

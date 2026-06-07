@@ -17,6 +17,8 @@ data/
 
 Do not commit restricted content unless the license allows it. Use `.gitignore` if source files must be kept local.
 
+Implemented downloaders use `data/sources/original/<provider>/...` for preserved source responses and `data/sources/processed/<provider>/...` for converted import JSON. Current providers are Tanzil, QuranEnc, and Quran Foundation.
+
 ## Source manifest
 
 Every import source should have metadata like:
@@ -85,7 +87,11 @@ For translation/tafsir imports:
 ```json
 {
   "content:import": "tsx scripts/import-content.ts",
+  "content:download:tanzil": "tsx scripts/download-tanzil-quran.ts",
+  "content:download:quranenc:translation": "tsx scripts/download-quranenc-translation.ts",
+  "content:download:tafsir": "tsx scripts/download-tafsir.ts",
   "content:import:quran": "tsx scripts/import-quran.ts",
+  "content:import:translation": "tsx scripts/import-translations.ts",
   "content:import:translations": "tsx scripts/import-translations.ts",
   "content:import:tafsir": "tsx scripts/import-tafsir.ts",
   "content:verify": "tsx scripts/verify-content.ts",
@@ -138,6 +144,8 @@ Implemented scripts:
 ```bash
 npm run content:download:tanzil
 npm run content:import -- data/sources/<type>/source.json
+npm run content:download:quranenc:translation
+npm run content:download:tafsir
 npm run content:verify -- <import-id>
 npm run content:publish -- <import-id>
 npm run content:audit
@@ -151,6 +159,10 @@ npm run content:import -- data/sources/processed/tanzil/quran-uthmani-v1.1.json
 ```
 
 The downloader stores the original Tanzil file in `data/sources/original/tanzil/`, stores converted JSON in `data/sources/processed/tanzil/`, and writes a local manifest with original and processed file SHA-256 checksums. The converter parses `surah|ayah|text` rows and skips only Tanzil copyright/comment lines from the processed row list; the original file is preserved separately.
+
+The QuranEnc translation downloader stores translation list and per-surah API responses under `data/sources/original/quranenc/translation/english_saheeh/`, writes processed JSON under `data/sources/processed/quranenc/translation/`, and records original/processed checksums. The source remains `candidate` until terms are reviewed.
+
+The Quran Foundation tafsir downloader is implemented but blocks unless credentials and `QF_TAFSIR_PERSISTENCE_REVIEWED=true` are provided after storage terms are reviewed. It writes original responses and processed JSON using the same original/processed directory pattern.
 
 The importer validates source metadata and row shape with Zod, stages inactive rows, and records row and summary checksums. Verification recomputes stored row checksums and records a `VerificationReport`. Publish requires `trustStatus: "approved"` and a verified import.
 

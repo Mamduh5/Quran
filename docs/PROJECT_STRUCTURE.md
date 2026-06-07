@@ -130,9 +130,12 @@ The repository now uses the recommended shape with these concrete additions:
 - `src/app/` contains Next.js App Router public pages, report actions, guarded admin pages, and an error boundary.
 - `src/components/` contains reader, source, report, layout, and shared UI components.
 - `src/modules/quran`, `translation`, `tafsir`, `content-source`, `verification`, `search`, `reports`, `admin`, and `shared` contain domain/application/infrastructure code.
+- `src/modules/admin/application` contains password hashing, signed sessions, CSRF tokens, and mutation guards; `src/modules/admin/infrastructure` adapts those guards to Next.js cookies.
+- `src/modules/translation/infrastructure/services/quranenc-source.ts` contains the QuranEnc converter.
+- `src/modules/tafsir/infrastructure/services/quran-foundation-tafsir-source.ts` contains the Quran Foundation tafsir converter.
 - `prisma/schema.prisma` and `prisma/migrations/20260602000000_initial/migration.sql` define the PostgreSQL schema.
 - `docker-compose.yml` defines local PostgreSQL for development and a test database initializer under `prisma/docker/`.
-- `scripts/` contains Tanzil download, import, verify, publish, audit, and HTTP route-check entrypoints.
+- `scripts/` contains admin hash, Tanzil download, QuranEnc download, tafsir download, import, verify, publish, audit, and HTTP route-check entrypoints.
 - `data/sources/` is ignored by Git and reserved for reviewed source files.
 - `data/fixtures/` is reserved for test-only fixtures.
 

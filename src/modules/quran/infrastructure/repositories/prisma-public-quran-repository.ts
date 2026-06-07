@@ -183,6 +183,7 @@ function mapPublicAyah(
           language: string;
           translatorName: string | null;
           text: string;
+          footnotes?: string | null;
           checksum: string;
           source: Parameters<typeof sourceView>[0];
         }>;
@@ -218,14 +219,21 @@ function mapPublicAyah(
           }
         }
       : null,
-    translations: ayah.translations.map((translation) => ({
-      id: translation.id,
-      language: translation.language,
-      translatorName: translation.translatorName,
-      text: translation.text,
-      source: sourceView(translation.source),
-      checksum: translation.checksum
-    })),
+    translations: ayah.translations.map((translation) => {
+      const translationWithFootnotes = translation as typeof translation & {
+        footnotes?: string | null;
+      };
+
+      return {
+        id: translation.id,
+        language: translation.language,
+        translatorName: translation.translatorName,
+        text: translation.text,
+        footnotes: translationWithFootnotes.footnotes ?? null,
+        source: sourceView(translation.source),
+        checksum: translation.checksum
+      };
+    }),
     tafsirs: ayah.tafsirs.map((tafsir) => ({
       id: tafsir.id,
       language: tafsir.language,

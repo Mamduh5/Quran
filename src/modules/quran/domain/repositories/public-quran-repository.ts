@@ -30,6 +30,7 @@ export type PublicAyahContent = {
     language: string;
     translatorName: string | null;
     text: string;
+    footnotes: string | null;
     source: PublicSourceView;
     checksum: string;
   }>;

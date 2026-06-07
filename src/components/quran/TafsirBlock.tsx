@@ -10,7 +10,7 @@ export function TafsirBlock({
   return (
     <details className="bg-warning-soft p-4" lang={language} open>
       <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-muted">
-        Tafsir / explanation: {title}
+        Tafsir / Explanation: {title}
       </summary>
       <p className="mt-2 text-ink">{text}</p>
     </details>

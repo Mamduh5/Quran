@@ -42,7 +42,7 @@ export function IssueReportForm({
         >
           <option value="quran_text">Arabic Quran text</option>
           <option value="translation">Translation of meaning</option>
-          <option value="tafsir">Tafsir / explanation</option>
+          <option value="tafsir">Tafsir / Explanation</option>
           <option value="source_metadata">Source metadata</option>
           <option value="display">Display issue</option>
           <option value="other">Other</option>

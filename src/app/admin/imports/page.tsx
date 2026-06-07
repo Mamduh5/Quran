@@ -1,16 +1,20 @@
 import { publishImportAction, verifyImportAction } from "@/app/admin/actions";
+import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { AdminDisabledNotice } from "@/components/ui/AdminDisabledNotice";
-import { getAdminAccess } from "@/modules/admin/application/admin-guard";
+import { getAdminMutationAccess } from "@/modules/admin/application/admin-guard";
+import { requireAdminSession } from "@/modules/admin/infrastructure/next-admin-session";
 import { listImportDashboardItems } from "@/modules/verification/infrastructure/repositories/prisma-verification-dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminImportsPage() {
-  const access = getAdminAccess();
+  const session = await requireAdminSession();
+  const access = getAdminMutationAccess();
   const imports = await listImportDashboardItems();
 
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6">
+      <AdminToolbar access={access} session={session} />
       {!access.enabled ? <AdminDisabledNotice reason={access.reason} /> : null}
       <header>
         <h1 className="text-3xl font-bold text-ink">Import dashboard</h1>

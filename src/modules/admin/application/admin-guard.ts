@@ -7,7 +7,11 @@ export type AdminAccess =
       reason: string;
     };
 
-export function getAdminAccess(): AdminAccess {
+export type AdminSessionView = {
+  email: string;
+};
+
+export function getAdminMutationAccess(): AdminAccess {
   if (isAdminEnabled()) {
     return { enabled: true };
   }
@@ -15,6 +19,19 @@ export function getAdminAccess(): AdminAccess {
   return {
     enabled: false,
     reason:
-      "Admin mutations are disabled. Set ADMIN_IMPORTS_ENABLED=true only in a trusted environment."
+      "Admin mutations are disabled. Set ADMIN_IMPORTS_ENABLED=true only after admin auth and the import source have been reviewed."
   };
+}
+
+export function requireAdminMutationAccess(
+  session: AdminSessionView | null
+): asserts session is AdminSessionView {
+  if (!session) {
+    throw new Error("Admin authentication is required.");
+  }
+
+  const access = getAdminMutationAccess();
+  if (!access.enabled) {
+    throw new Error(access.reason);
+  }
 }

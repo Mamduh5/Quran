@@ -34,6 +34,7 @@ This project must protect Quran content integrity. This policy applies to Arabic
 - Store translations as translation of meaning.
 - Always display translator/source name.
 - Preserve source text according to the source license and format policy.
+- Store source footnotes separately from the translation body when provided.
 - Do not label translation as Quran.
 - Do not silently combine translations.
 
@@ -107,9 +108,12 @@ Resolution must happen through source review and a new verified import when cont
 - Public repository queries filter Quran text by active row, approved source, published import, and non-null verification timestamp.
 - Public translation and tafsir queries filter by active row, approved source, and published import.
 - Admin pages do not include direct edit forms for Quran text, translation text, or tafsir text.
-- Admin dashboards are readable, but verify/publish mutations are hidden and server-guarded unless `ADMIN_IMPORTS_ENABLED=true`.
+- Admin dashboards require authenticated admin login.
+- Admin verify/publish mutations require both an authenticated admin session and `ADMIN_IMPORTS_ENABLED=true`.
 - Import scripts stage inactive rows and generate per-row SHA-256 checksums.
 - Verification scripts recompute row checksums and record `VerificationReport` rows.
 - Publish requires a verified import and an approved source.
 - Issue reports create review records and do not mutate authoritative content.
 - Tanzil downloading is explicit (`npm run content:download:tanzil`), uses the official Tanzil endpoint, preserves the original file separately, records file checksums, and converts only row structure into the documented import JSON shape.
+- QuranEnc translation downloading is explicit (`npm run content:download:quranenc:translation`), preserves original API responses separately, records checksums, stores footnotes separately, and leaves source trust status as `candidate` until terms are approved.
+- Quran Foundation tafsir downloading is explicit (`npm run content:download:tafsir`) and blocked by default until API credentials and persistent storage terms are reviewed.

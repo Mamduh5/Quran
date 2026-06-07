@@ -1,6 +1,7 @@
 import "dotenv/config";
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -11,8 +12,18 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { SourceFileInput } from "@/modules/shared/validation/content";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+const prismaCli = path.join(
+  process.cwd(),
+  "node_modules",
+  "prisma",
+  "build",
+  "index.js"
+);
 const canRunDatabaseTests =
-  Boolean(testDatabaseUrl) && /quran_reader_test/.test(testDatabaseUrl ?? "");
+  Boolean(testDatabaseUrl) &&
+  /quran_reader_test/.test(testDatabaseUrl ?? "") &&
+  process.env.RUN_DATABASE_TESTS === "true" &&
+  canSpawnPrismaSchemaEngine();
 
 const describeDatabase = describe.skipIf(!canRunDatabaseTests);
 
@@ -30,13 +41,6 @@ describeDatabase("content workflow integration", () => {
     }
 
     process.env.DATABASE_URL = testDatabaseUrl;
-    const prismaCli = path.join(
-      process.cwd(),
-      "node_modules",
-      "prisma",
-      "build",
-      "index.js"
-    );
     execFileSync(process.execPath, [prismaCli, "migrate", "deploy"], {
       cwd: process.cwd(),
       env: { ...process.env, DATABASE_URL: testDatabaseUrl },
@@ -237,4 +241,24 @@ async function resetDatabase() {
   await prisma.contentSource.deleteMany();
   await prisma.ayah.deleteMany();
   await prisma.surah.deleteMany();
+}
+
+function canSpawnPrismaSchemaEngine() {
+  if (process.platform !== "win32") {
+    return true;
+  }
+
+  const enginePath = path.join(
+    process.cwd(),
+    "node_modules",
+    "@prisma",
+    "engines",
+    "schema-engine-windows.exe"
+  );
+
+  if (!existsSync(enginePath)) {
+    return true;
+  }
+
+  return !spawnSync(enginePath, ["--version"], { stdio: "pipe" }).error;
 }

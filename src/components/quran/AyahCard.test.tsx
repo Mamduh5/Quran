@@ -34,6 +34,7 @@ const ayah: PublicAyahContent = {
       language: "en",
       translatorName: "Fixture Translator",
       text: "test fixture translation section only",
+      footnotes: "test fixture footnote section only",
       source: {
         id: "source-2",
         name: "Fixture Translation Source",
@@ -73,7 +74,8 @@ describe("AyahCard", () => {
 
     expect(html).toContain('dir="rtl"');
     expect(html).toContain("Translation of meaning");
-    expect(html).toContain("Tafsir / explanation");
+    expect(html).toContain("Translation footnotes");
+    expect(html).toContain("Tafsir / Explanation");
     expect(html).toContain("Arabic Quran text source details");
     expect(html).toContain("Translation source details");
     expect(html).toContain("Tafsir source details");

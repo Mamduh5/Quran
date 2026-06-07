@@ -42,6 +42,7 @@ export function AyahCard({ ayah }: { ayah: PublicAyahContent }) {
           ayah.translations.map((translation) => (
             <div className="grid gap-2" key={translation.id}>
               <TranslationBlock
+                footnotes={translation.footnotes}
                 language={translation.language}
                 text={translation.text}
               />

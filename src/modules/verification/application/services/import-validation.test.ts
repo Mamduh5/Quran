@@ -37,6 +37,31 @@ describe("import validation", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("rejects ayah numbers outside the known surah bounds", () => {
+    const result = validateImportSourceFile({
+      ...validInput,
+      rows: [{ ...validInput.rows[0], surahNumber: 1, ayahNumber: 8 }]
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects translation rows without source or row language", () => {
+    const result = validateImportSourceFile({
+      ...validInput,
+      metadata: {
+        sourceName: "Fixture Source",
+        provider: "Fixture Provider",
+        contentType: "translation",
+        version: "test-only",
+        trustStatus: "candidate"
+      },
+      rows: [{ surahNumber: 1, ayahNumber: 1, text: "fixture translation" }]
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
   it("rejects duplicate rows for the same source reference", () => {
     const result = validateImportSourceFile({
       ...validInput,

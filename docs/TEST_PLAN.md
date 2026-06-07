@@ -14,9 +14,10 @@
 - Rejects missing source metadata.
 - Rejects missing content type.
 - Rejects invalid surah numbers.
-- Rejects invalid ayah numbers.
+- Rejects invalid ayah numbers, including ayah numbers outside each surah's known range.
 - Rejects duplicate rows for the same source/import/reference.
 - Rejects production import when source is not approved for publication.
+- Rejects translation and tafsir rows without a row or source language.
 
 ### Verification service
 
@@ -53,7 +54,9 @@ If frontend test tooling exists:
 - Visit `/quran` and see surah index or empty state.
 - Visit `/sources` and see source registry or empty state.
 - Submit a content issue report with valid data.
-- Admin pages are protected or clearly disabled when auth is absent.
+- Admin pages redirect to `/admin/login` when auth is absent.
+- Authenticated admin pages render when admin credentials are configured.
+- Admin mutation actions require auth plus `ADMIN_IMPORTS_ENABLED=true`.
 
 ## Manual QA checklist
 
@@ -101,6 +104,10 @@ Current unit and smoke tests cover:
 - admin UI source files containing no direct authoritative text edit fields
 - DB-backed workflow integration using `TEST_DATABASE_URL`: malformed import rejection, valid import staging, verification, publish, verification mismatch failure, publish blocked for unapproved sources, publish blocked before verification, and public repository filtering before and after publication
 - HTTP route checker script: all public/admin routes return 200, imported content appears on `/quran/1`, `/quran/1/1`, and `/search`, and issue report submission creates one report without mutating Quran rows
+- admin password hash and signed-session unit tests
+- QuranEnc converter tests preserving translation text and separate footnotes
+- Quran Foundation tafsir converter tests preserving tafsir text
+- HTTP route checker script: public routes return 200, unauthenticated admin routes redirect to login, optional authenticated admin route proof runs when `ADMIN_ROUTE_CHECK_PASSWORD` is set, published Arabic/translation/tafsir content is checked where present, and issue report submission creates one report without mutating Quran, translation, or tafsir rows
 
 Run:
 
@@ -108,3 +115,12 @@ Run:
 npm test
 npm run app:check:routes -- http://localhost:3000
 ```
+
+Database-backed workflow integration tests are enabled explicitly:
+
+```bash
+set RUN_DATABASE_TESTS=true
+npm test
+```
+
+They require `TEST_DATABASE_URL`, a reachable test database, and a local environment that can spawn Prisma engines.

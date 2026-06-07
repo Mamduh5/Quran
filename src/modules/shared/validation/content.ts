@@ -25,13 +25,21 @@ export const sourceMetadataSchema = z.object({
   contentType: z.enum(["quran_text", "translation", "tafsir"]),
   language: z.string().trim().min(2).optional(),
   version: z.string().trim().min(1).optional(),
+  sourceKey: z.string().trim().min(1).optional(),
+  title: z.string().trim().min(1).optional(),
+  authorName: z.string().trim().min(1).optional(),
+  lastUpdate: z.union([z.string().trim().min(1), z.number()]).optional(),
   url: z.string().url().optional(),
   downloadUrl: z.string().url().optional(),
+  apiDocsUrl: z.string().url().optional(),
   licenseName: z.string().trim().min(1).optional(),
   licenseUrl: z.string().url().optional(),
+  termsUrl: z.string().url().optional(),
   downloadedAt: z.string().datetime().optional(),
   originalFileName: z.string().trim().min(1).optional(),
   originalFileSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  originalFileChecksums: z.record(z.string().regex(/^[a-f0-9]{64}$/)).optional(),
+  sourceDetails: z.record(z.unknown()).optional(),
   notes: z.string().trim().optional(),
   trustStatus: z
     .enum(["candidate", "approved", "deprecated", "rejected"])
@@ -46,6 +54,7 @@ export const importedContentRowSchema = z.object({
   translatorName: z.string().trim().min(1).optional(),
   tafsirName: z.string().trim().min(1).optional(),
   authorName: z.string().trim().min(1).optional(),
+  footnotes: z.string().optional(),
   text: z.string().min(1)
 });
 

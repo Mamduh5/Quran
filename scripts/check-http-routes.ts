@@ -7,7 +7,7 @@ const baseUrl = (process.argv[2] ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://l
   ""
 );
 
-const routes = [
+const publicRoutes = [
   "/",
   "/quran",
   "/quran/1",
@@ -15,6 +15,10 @@ const routes = [
   "/search",
   "/sources",
   "/reports/new",
+  "/admin/login"
+];
+
+const protectedAdminRoutes = [
   "/admin/imports",
   "/admin/verification",
   "/admin/sources",
@@ -24,7 +28,7 @@ const routes = [
 async function main() {
   const responses = new Map<string, string>();
 
-  for (const route of routes) {
+  for (const route of publicRoutes) {
     const response = await fetch(`${baseUrl}${route}`);
     const body = await response.text();
     responses.set(route, body);
@@ -36,6 +40,95 @@ async function main() {
     console.log(`${response.status} ${route}`);
   }
 
+  await assertAdminRoutesProtected();
+  await assertAuthenticatedAdminRoutes();
+  await assertPublishedContentProofs(responses);
+  await submitIssueReport();
+}
+
+async function assertAdminRoutesProtected() {
+  for (const route of protectedAdminRoutes) {
+    const response = await fetch(`${baseUrl}${route}`, {
+      redirect: "manual"
+    });
+    const location = response.headers.get("location") ?? "";
+
+    if (![303, 307, 308].includes(response.status)) {
+      throw new Error(`${route} should redirect unauthenticated users, got HTTP ${response.status}.`);
+    }
+
+    if (!location.includes("/admin/login")) {
+      throw new Error(`${route} redirected to ${location}, expected /admin/login.`);
+    }
+
+    console.log(`${response.status} ${route} -> /admin/login`);
+  }
+}
+
+async function assertAuthenticatedAdminRoutes() {
+  const password = process.env.ADMIN_ROUTE_CHECK_PASSWORD;
+  const adminEmail = process.env.ADMIN_EMAIL;
+
+  if (
+    !password ||
+    !adminEmail ||
+    !process.env.ADMIN_PASSWORD_HASH ||
+    !process.env.AUTH_SECRET
+  ) {
+    console.log(
+      "Authenticated admin route proof skipped: set AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, and ADMIN_ROUTE_CHECK_PASSWORD."
+    );
+    return;
+  }
+
+  const jar = new Map<string, string>();
+  const loginPage = await fetchWithCookies(`${baseUrl}/admin/login`, {}, jar);
+  const loginHtml = await loginPage.text();
+  const actionId = loginHtml.match(/name="(\$ACTION_ID_[^"]+)"/)?.[1];
+  const csrfToken = loginHtml.match(/name="csrfToken"[^>]*value="([^"]*)"/)?.[1];
+
+  if (!actionId || !csrfToken) {
+    throw new Error("Admin login form did not include a server action id and CSRF token.");
+  }
+
+  const formData = new FormData();
+  formData.append(actionId, "");
+  formData.append("csrfToken", csrfToken);
+  formData.append("email", adminEmail);
+  formData.append("password", password);
+
+  const loginResponse = await fetchWithCookies(
+    `${baseUrl}/admin/login`,
+    {
+      method: "POST",
+      body: formData,
+      headers: { origin: baseUrl },
+      redirect: "manual"
+    },
+    jar
+  );
+
+  if (![303, 307, 308].includes(loginResponse.status)) {
+    throw new Error(`Admin login failed: HTTP ${loginResponse.status}.`);
+  }
+
+  for (const route of protectedAdminRoutes) {
+    const response = await fetchWithCookies(`${baseUrl}${route}`, {}, jar);
+    const body = await response.text();
+
+    if (response.status !== 200) {
+      throw new Error(`Authenticated ${route} returned HTTP ${response.status}.`);
+    }
+
+    if (body.includes("Admin login")) {
+      throw new Error(`Authenticated ${route} still rendered the login page.`);
+    }
+
+    console.log(`200 authenticated ${route}`);
+  }
+}
+
+async function assertPublishedContentProofs(responses: Map<string, string>) {
   const publishedAyah = await prisma.quranText.findFirst({
     where: {
       active: true,
@@ -56,27 +149,65 @@ async function main() {
     assertBodyIncludes("/quran/1", responses, publishedAyah.text);
     assertBodyIncludes("/quran/1/1", responses, publishedAyah.text);
     assertBodyIncludes("/quran/1/1", responses, publishedAyah.source.name);
+    assertBodyIncludes("/sources", responses, publishedAyah.source.name);
 
-    const searchToken = publishedAyah.text.split(/\s+/)[0];
-    const searchResponse = await fetch(
-      `${baseUrl}/search?q=${encodeURIComponent(searchToken)}`
-    );
-    const searchBody = await searchResponse.text();
-
-    if (searchResponse.status !== 200) {
-      throw new Error(`/search?q=<published-token> returned HTTP ${searchResponse.status}.`);
-    }
-
-    if (!searchBody.includes(publishedAyah.source.name)) {
-      throw new Error("Search did not show the published Quran source.");
-    }
+    await assertSearchFindsSource(publishedAyah.text, publishedAyah.source.name);
 
     console.log("Imported content proof: /quran/1, /quran/1/1, and /search show published text.");
   } else {
     console.log("No published ayah found; route checks covered safe empty states only.");
   }
 
-  await submitIssueReport();
+  const publishedTranslation = await prisma.translation.findFirst({
+    where: {
+      active: true,
+      source: { trustStatus: "approved" },
+      import: { importStatus: "published" },
+      ayah: {
+        ayahNumber: 1,
+        surah: { number: 1 }
+      }
+    },
+    include: { source: true }
+  });
+
+  if (publishedTranslation) {
+    assertBodyIncludes("/quran/1", responses, publishedTranslation.text);
+    assertBodyIncludes("/quran/1/1", responses, "Translation of meaning");
+    assertBodyIncludes("/quran/1/1", responses, publishedTranslation.source.name);
+    assertBodyIncludes("/sources", responses, publishedTranslation.source.name);
+    await assertSearchFindsSource(
+      publishedTranslation.text,
+      publishedTranslation.source.name
+    );
+    console.log("Translation proof: reader, source registry, and search show published translation.");
+  } else {
+    console.log("No published translation found; translation proof skipped.");
+  }
+
+  const publishedTafsir = await prisma.tafsir.findFirst({
+    where: {
+      active: true,
+      source: { trustStatus: "approved" },
+      import: { importStatus: "published" },
+      ayah: {
+        ayahNumber: 1,
+        surah: { number: 1 }
+      }
+    },
+    include: { source: true }
+  });
+
+  if (publishedTafsir) {
+    assertBodyIncludes("/quran/1", responses, publishedTafsir.text);
+    assertBodyIncludes("/quran/1/1", responses, "Tafsir / Explanation");
+    assertBodyIncludes("/quran/1/1", responses, publishedTafsir.source.name);
+    assertBodyIncludes("/sources", responses, publishedTafsir.source.name);
+    await assertSearchFindsSource(publishedTafsir.text, publishedTafsir.source.name);
+    console.log("Tafsir proof: reader, source registry, and search show published tafsir.");
+  } else {
+    console.log("No published tafsir found; safe empty tafsir state remains in use.");
+  }
 }
 
 function assertBodyIncludes(
@@ -90,10 +221,38 @@ function assertBodyIncludes(
   }
 }
 
+async function assertSearchFindsSource(text: string, sourceName: string) {
+  const searchToken = selectProofToken(text);
+  const searchResponse = await fetch(
+    `${baseUrl}/search?q=${encodeURIComponent(searchToken)}`
+  );
+  const searchBody = await searchResponse.text();
+
+  if (searchResponse.status !== 200) {
+    throw new Error(`/search?q=<published-token> returned HTTP ${searchResponse.status}.`);
+  }
+
+  if (!searchBody.includes(sourceName)) {
+    throw new Error(`Search did not show the published source ${sourceName}.`);
+  }
+}
+
+function selectProofToken(text: string): string {
+  return (
+    text
+      .split(/\s+/)
+      .find((token) => token.replace(/[^\p{L}\p{M}]/gu, "").length >= 4) ??
+    text.slice(0, 8)
+  );
+}
+
 async function submitIssueReport() {
-  const [reportsBefore, quranRowsBefore] = await Promise.all([
+  const [reportsBefore, quranRowsBefore, translationRowsBefore, tafsirRowsBefore] =
+    await Promise.all([
     prisma.contentIssueReport.count(),
-    prisma.quranText.count()
+    prisma.quranText.count(),
+    prisma.translation.count(),
+    prisma.tafsir.count()
   ]);
   const formPage = await fetch(`${baseUrl}/reports/new?ayah=1:1`);
   const formHtml = await formPage.text();
@@ -115,6 +274,7 @@ async function submitIssueReport() {
   const response = await fetch(`${baseUrl}/reports/new?ayah=1:1`, {
     method: "POST",
     body: formData,
+    headers: { origin: baseUrl },
     redirect: "follow"
   });
 
@@ -124,9 +284,12 @@ async function submitIssueReport() {
     );
   }
 
-  const [reportsAfter, quranRowsAfter] = await Promise.all([
+  const [reportsAfter, quranRowsAfter, translationRowsAfter, tafsirRowsAfter] =
+    await Promise.all([
     prisma.contentIssueReport.count(),
-    prisma.quranText.count()
+    prisma.quranText.count(),
+    prisma.translation.count(),
+    prisma.tafsir.count()
   ]);
 
   if (reportsAfter !== reportsBefore + 1) {
@@ -137,7 +300,68 @@ async function submitIssueReport() {
     throw new Error("Issue report submission mutated Quran text rows.");
   }
 
-  console.log("Issue report proof: created one report without mutating Quran rows.");
+  if (
+    translationRowsAfter !== translationRowsBefore ||
+    tafsirRowsAfter !== tafsirRowsBefore
+  ) {
+    throw new Error("Issue report submission mutated translation or tafsir rows.");
+  }
+
+  console.log("Issue report proof: created one report without mutating authoritative rows.");
+}
+
+async function fetchWithCookies(
+  url: string,
+  init: RequestInit,
+  jar: Map<string, string>
+) {
+  const headers = new Headers(init.headers);
+  const cookieHeader = Array.from(jar.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
+
+  if (cookieHeader) {
+    headers.set("cookie", cookieHeader);
+  }
+
+  const response = await fetch(url, { ...init, headers });
+  storeSetCookies(response, jar);
+  return response;
+}
+
+function storeSetCookies(response: Response, jar: Map<string, string>) {
+  const headerApi = response.headers as Headers & {
+    getSetCookie?: () => string[];
+  };
+  const cookies =
+    headerApi.getSetCookie?.() ??
+    splitSetCookieHeader(response.headers.get("set-cookie"));
+
+  for (const setCookie of cookies) {
+    const [pair, ...attributes] = setCookie.split(";");
+    const separator = pair.indexOf("=");
+    if (separator === -1) {
+      continue;
+    }
+
+    const name = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+    const expires = attributes.join(";").toLowerCase();
+
+    if (expires.includes("max-age=0")) {
+      jar.delete(name);
+    } else {
+      jar.set(name, value);
+    }
+  }
+}
+
+function splitSetCookieHeader(header: string | null): string[] {
+  if (!header) {
+    return [];
+  }
+
+  return header.split(/,(?=\s*[^;,=]+=[^;,]+)/);
 }
 
 main()

@@ -52,7 +52,8 @@ For translations:
       "ayahNumber": 1,
       "language": "en",
       "translatorName": "Translator name",
-      "text": "<exact source translation>"
+      "text": "<exact source translation>",
+      "footnotes": "<exact source footnotes, if provided>"
     }
   ]
 }
@@ -108,10 +109,50 @@ npm run content:publish -- <import-id>
 npm run content:audit
 ```
 
+Download QuranEnc English translation candidate source:
+
+```bash
+npm run content:download:quranenc:translation
+```
+
+This writes:
+
+- original source files: `data/sources/original/quranenc/translation/english_saheeh/`
+- processed import file: `data/sources/processed/quranenc/translation/english_saheeh.json`
+- local checksum manifest: `data/sources/processed/quranenc/translation/english_saheeh.manifest.json`
+
+Then stage and verify:
+
+```bash
+npm run content:import:translation -- data/sources/processed/quranenc/translation/english_saheeh.json
+npm run content:verify -- <translation-import-id>
+```
+
+Publishing will fail while the source remains `candidate`. After source terms are reviewed and the processed source metadata is approved by policy, publish with:
+
+```bash
+npm run content:publish -- <translation-import-id>
+npm run content:audit
+```
+
+Download Quran Foundation tafsir only after credentials and persistent storage review:
+
+```bash
+set QF_CLIENT_ID=<client-id>
+set QF_CLIENT_SECRET=<client-secret>
+set QF_TAFSIR_PERSISTENCE_REVIEWED=true
+npm run content:download:tafsir
+npm run content:import:tafsir -- data/sources/processed/quran-foundation/tafsir/tafsir-169.json
+npm run content:verify -- <tafsir-import-id>
+```
+
+The default tafsir source is also `candidate`; publish only after source/license approval.
+
 Type-specific aliases:
 
 ```bash
 npm run content:import:quran -- data/sources/quran/source.json
+npm run content:import:translation -- data/sources/translations/source.json
 npm run content:import:translations -- data/sources/translations/source.json
 npm run content:import:tafsir -- data/sources/tafsir/source.json
 npm run content:verify:quran -- <import-id> --publish
@@ -127,7 +168,7 @@ contentType|sourceId|importId|surahNumber|ayahNumber|scriptOrLanguage|text
 
 Import summary checksums sort row checksums and hash them joined by newline.
 
-Source file checksums use SHA-256 over the downloaded original file bytes. The Tanzil downloader records both original and processed file checksums in the local manifest.
+Source file checksums use SHA-256 over the downloaded original file bytes. Downloaders record original file checksums and processed file checksums in local manifests. The database import manifest also records the processed file checksum and row checksum summary.
 
 ## Verification and Publish Rules
 

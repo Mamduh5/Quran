@@ -3,11 +3,22 @@ import { prisma } from "@/modules/shared/database/prisma";
 
 async function main() {
   requireDatabaseUrl();
-  const [sources, imports, activeQuranTexts, unverifiedPublicRows] =
+  const [
+    sources,
+    imports,
+    activeQuranTexts,
+    activeTranslations,
+    activeTafsirs,
+    unsafeQuranRows,
+    unsafeTranslationRows,
+    unsafeTafsirRows
+  ] =
     await Promise.all([
       prisma.contentSource.count(),
       prisma.contentImport.count(),
       prisma.quranText.count({ where: { active: true } }),
+      prisma.translation.count({ where: { active: true } }),
+      prisma.tafsir.count({ where: { active: true } }),
       prisma.quranText.count({
         where: {
           active: true,
@@ -17,8 +28,29 @@ async function main() {
             { import: { importStatus: { not: "published" } } }
           ]
         }
+      }),
+      prisma.translation.count({
+        where: {
+          active: true,
+          OR: [
+            { source: { trustStatus: { not: "approved" } } },
+            { import: { importStatus: { not: "published" } } }
+          ]
+        }
+      }),
+      prisma.tafsir.count({
+        where: {
+          active: true,
+          OR: [
+            { source: { trustStatus: { not: "approved" } } },
+            { import: { importStatus: { not: "published" } } }
+          ]
+        }
       })
     ]);
+
+  const unsafePublicRows =
+    unsafeQuranRows + unsafeTranslationRows + unsafeTafsirRows;
 
   console.log(
     JSON.stringify(
@@ -26,8 +58,12 @@ async function main() {
         sources,
         imports,
         activeQuranTexts,
-        unverifiedPublicRows,
-        passed: unverifiedPublicRows === 0
+        activeTranslations,
+        activeTafsirs,
+        unsafeQuranRows,
+        unsafeTranslationRows,
+        unsafeTafsirRows,
+        passed: unsafePublicRows === 0
       },
       null,
       2

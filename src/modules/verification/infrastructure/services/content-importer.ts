@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+import type { Prisma } from "@prisma/client";
 
 import {
   rowChecksum,
+  sha256Bytes,
   summaryChecksum
 } from "@/modules/shared/crypto/checksum";
 import { prisma } from "@/modules/shared/database/prisma";
@@ -30,6 +34,13 @@ export async function readSourceFile(filePath: string): Promise<SourceFileInput>
 export async function stageImportFromFile(filePath: string) {
   const sourceFile = await readSourceFile(filePath);
   const metadata = sourceFile.metadata;
+  const processedFileSha256 = sha256Bytes(await readFile(filePath));
+  const importManifest = {
+    metadata,
+    expectedRecords: sourceFile.expectedRecords ?? null,
+    processedFilePath: path.relative(process.cwd(), filePath),
+    processedFileSha256
+  };
 
   const source = await prisma.contentSource.upsert({
     where: {
@@ -69,10 +80,7 @@ export async function stageImportFromFile(filePath: string) {
       sourceVersion: metadata.version,
       importStatus: "staged",
       totalRecords: sourceFile.rows.length,
-      manifestJson: {
-        metadata,
-        expectedRecords: sourceFile.expectedRecords ?? null
-      }
+      manifestJson: toPrismaJson(importManifest)
     }
   });
 
@@ -142,17 +150,20 @@ export async function stageImportFromFile(filePath: string) {
     }
 
     if (metadata.contentType === "translation") {
-      await prisma.translation.create({
-        data: {
+      const data = {
           ayahId: ayah.id,
           language: row.language ?? metadata.language ?? "und",
           translatorName: row.translatorName,
           text: row.text,
+          footnotes: row.footnotes,
           sourceId: source.id,
           importId: contentImport.id,
           checksum,
           active: false
-        }
+        };
+
+      await prisma.translation.create({
+        data: data as Parameters<typeof prisma.translation.create>[0]["data"]
       });
     }
 
@@ -176,7 +187,13 @@ export async function stageImportFromFile(filePath: string) {
   const checksumSummary = summaryChecksum(rowChecksums);
   return prisma.contentImport.update({
     where: { id: contentImport.id },
-    data: { checksumSummary }
+    data: {
+      checksumSummary,
+      manifestJson: toPrismaJson({
+        ...importManifest,
+        rowChecksumSummary: checksumSummary
+      })
+    }
   });
 }
 
@@ -311,4 +328,8 @@ function scriptOrLanguageForRow(
   }
 
   return row.language ?? sourceLanguage ?? "und";
+}
+
+function toPrismaJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
